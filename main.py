@@ -18,3 +18,27 @@ def Crc32(buf, len): #- определяем функцию с именем Crc3
         len -= 1 # - уменьшаем счетчик длины на 1.
     return ctypes.c_uint32(crc.value ^ 0xFFFFFFFF).value
     #возвращаем итоговое значение CRC32, которое получается путем инвертирования битов результата и применения операции XOR с 0xFFFFFFFF.
+
+
+
+#         xor     eax,eax
+# calc_crc32:
+#         lodsb                   ; Получить следующий символ строки
+#         mov     ebx,edx         ; Скопировать текущее значение CRC32
+#         and     ebx,0FFh
+#         xor     bl,al           ; XOR с текущим символом блока данных
+ 
+#         shl     ebx,2           ; Вычисление смещения нужного dword в таблице
+#         shr     edx,8
+#         and     edx,0FFFFFFh
+#         xor     edx,[crc32table+ebx] ; XOR CRC32 со значением из таблицы
+ 
+#         loop    calc_crc32      ; Перейти к следующему символу
+ 
+#         mov     eax,edx         ; В регистре EAX записана CRC32 строки
+ 
+#         ; Если дальнейшая обработка не требуется, то проXORить CRC32
+#         ; для завершения расчетов
+#         cmp     [dFlag],TRUE
+#         jne     @f
+#         xor     eax,-1

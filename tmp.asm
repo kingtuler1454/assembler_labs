@@ -1,13 +1,9 @@
 ; библиотека для макросов SASM
 %include "io64.inc"  
-
 section .bss ;для объявления неинициализированных переменных
-    arr: resd 110   ;4-байтных слов
-    arr_size: resd 1  ;4-байтных слов
-    crc_string: resb 256 ; указывает количество байт, которые необходимо зарезервировать
-    string_size: resd 256
-    src_result: resd 256
-
+    crc_string resb 256 ; указывает количество байт, которые необходимо зарезервировать
+    crc32_result resd 1 ; Место для результата CRC32
+    
 section .data:
     crc32_table dd 000000000h, 077073096h, 0ee0e612ch, 0990951bah, 0076dc419h
         dd 0706af48fh, 0e963a535h, 09e6495a3h, 00edb8832h, 079dcb8a4h
@@ -61,49 +57,21 @@ section .data:
         dd 0cdd70693h, 054de5729h, 023d967bfh, 0b3667a2eh, 0c4614ab8h
         dd 05d681b02h, 02a6f2b94h, 0b40bbe37h, 0c30c8ea1h, 05a05df1bh
         dd 02d02ef8dh
-
+        
 section .text
-    global main
+    global main 
     main:
-    mov rbp, rsp; for correct debugging
-        PRINT_STRING "Array length: "
-        GET_DEC 4, [arr_size]
-        PRINT_DEC 4, [arr_size]
-        NEWLINE    
-    fill:
-        PRINT_STRING "--Array fill--"
-        NEWLINE
-        mov ebx, arr  ; загружаем адрес начала массива в ebx
-        mov ecx, [arr_size]  ; загружаем размер массива в ecx
-        .fill_loop:
-            cmp ecx, 0  ; проверяем, если ecx равен 0, то выходим из цикла
-            je .end_loop
-            PRINT_STRING "elem of array:"
-            GET_DEC 4, [ebx]  ; считываем значение и сохраняем в текущей ячейке массива
-            GET_CHAR al ; <----------
-            PRINT_DEC 4, [ebx]
-            NEWLINE
-            add ebx, 4  ; переходим к следующей ячейке
-            sub ecx, 1  ; уменьшаем счетчик цикла на 1
-            jmp .fill_loop  ; переходим в начало цикла
-        .end_loop:
-            PRINT_STRING "--Array filled--"
-            NEWLINE
-            
-
-    CRC_fill_arr:
+        mov rbp, rsp; for correct debugging
         PRINT_STRING "Enter the string for CRC32: "
         GET_STRING [crc_string], 256
         PRINT_STRING [crc_string]
-        NEWLINE
-        
+        NEWLINE       
         mov esi, crc_string ; загрузка адреса строки в регистр esi
         mov eax, 0xFFFFFFFF ; начальное значение CRC32
     start_loop:
         movzx ebx, byte [esi] ; загрузка очередного символа строки в регистр ebx (используется нулевой байт, т.к. строка хранится в формате ASCII)
         cmp ebx, 0 ; проверка на конец строки
         je end_loop
-        
         mov edx, eax ; сохранение текущего значения CRC32 в регистр edx
         shr eax, 8 ; сдвиг значения CRC32 на 8 бит вправо
         xor eax, dword [crc32_table + ebx*4] ; комбинирование значения CRC32 с предвычисленным значением из таблицы
@@ -115,28 +83,9 @@ section .text
         jmp start_loop
     end_loop:
         not eax ; инвертирование значения CRC32
-        
+        mov [crc32_result], eax ; Сохранение результата в crc32_result
+        PRINT_STRING "Value CRC32: "
+        PRINT_HEX 8,[crc32_result] ; Вывод значения CRC32
+        NEWLINE
         ret
-        
-    
-    
-    
-    
-    
-    
-    
-    
- 
-
-    
-    
-    
-    
-    
-    
-
-
-     
-
-
 
